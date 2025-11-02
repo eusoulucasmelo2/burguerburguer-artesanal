@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Burguer Burguer Artesanal – Cardápio</title>
+  <style>
+    :root{
+      --bg:#1a120b; /* marrom escuro rústico */
+      --panel:#22170f;
+      --accent:#F59E0B; /* âmbar */
+      --text:#F3F4F6;
+      --muted:#C7C9CC;
+      --ok:#22c55e;
+      --danger:#ef4444;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial,sans-serif}
+    .wrap{max-width:1000px;margin:auto;padding:24px}
+    header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:18px}
+    h1{font-size: clamp(24px, 4vw, 36px); margin:0; letter-spacing:.5px}
+    .brand{display:flex;align-items:center;gap:14px}
+    .badge{background:linear-gradient(135deg,#7c4a21,#3a2719);border:1px solid #5d3a22;padding:8px 12px;border-radius:999px;font-weight:700;letter-spacing:1px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+    .card{background:linear-gradient(180deg,var(--panel),#1b120b);border:1px solid #3a2a1e;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+    .card img{width:100%;height:180px;object-fit:cover;display:block;}
+    .card .body{padding:14px 14px 12px}
+    .name{font-weight:800;letter-spacing:.6px;margin:0 0 6px 0}
+    .desc{color:var(--muted);font-size:14px;min-height:40px}
+    .priceQty{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+    .price{font-weight:800; font-size: 18px;}
+    .qty{display:flex;align-items:center;gap:8px}
+    button{cursor:pointer;border:0;border-radius:12px;padding:10px 12px;font-weight:700}
+    .btn{background:var(--accent);color:#111}
+    .btn:active{transform:translateY(1px)}
+    .ghost{background:transparent;border:1px solid #5b422f;color:var(--text)}
+    .qty button{width:36px;height:36px;border-radius:10px;font-size:18px;background:#2a1d14;color:#f8f8f8;border:1px solid #58402e}
+    .cartBar{position:sticky;bottom:16px;inset-inline:0;display:flex;justify-content:center;pointer-events:none}
+    .cartInner{pointer-events:auto;background:#0f0a06e6;backdrop-filter: blur(6px);border:1px solid #3b2a1f;border-radius:16px;display:flex;align-items:center;gap:12px;padding:10px 12px;max-width:1000px;width:calc(100% - 32px)}
+    .cartInner strong{letter-spacing:.5px}
+    .spacer{flex:1}
+    .drawer{position:fixed;inset:0;background:#00000080;display:none}
+    .panel{position:absolute;right:0;top:0;height:100%;width:min(520px,100%);background:#130d08;border-left:1px solid #3a2a1e;display:flex;flex-direction:column}
+    .panel header{padding:14px 16px;border-bottom:1px solid #392717;margin:0}
+    .panel h2{margin:0;font-size:20px}
+    .items{padding:8px 16px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:10px}
+    .item{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;background:#1b120c;border:1px solid #3a2a1e;border-radius:12px;padding:10px}
+    .item .title{font-weight:700}
+    .item .controls{display:flex;align-items:center;gap:8px}
+    .footer{padding:12px 16px;border-top:1px solid #392717;display:grid;gap:10px}
+    input, textarea, select{width:100%;background:#110b07;border:1px solid #4b3626;color:var(--text);padding:10px;border-radius:10px}
+    .total{display:flex;justify-content:space-between;align-items:center;font-size:18px;font-weight:800}
+    .whats{background:#25D366;color:#111}
+    .muted{color:var(--muted)}
+    .tiny{font-size:12px}
+    .note{font-size:13px;color:#d9d6d3}
+    .pill{padding:4px 8px;border-radius:999px;background:#2a1a0f;border:1px solid #4f3625}
+    .hidden{display:none}
+    a{color:inherit;text-decoration:none}
+    
+    /*************************************************
+     * NOVOS ESTILOS (ADICIONADOS)
+     *************************************************/
+
+    /* --- Banner Black Friday --- */
+    .black-friday-banner {
+      background: linear-gradient(135deg, var(--accent), #e08b00);
+      color: #111;
+      text-align: center;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      letter-spacing: 0.5px;
+    }
+
+    /* --- Preços com Desconto --- */
+    .price .old-price {
+      text-decoration: line-through;
+      color: var(--muted);
+      font-weight: 400;
+      font-size: 14px;
+      margin-right: 6px;
+    }
+    .price .new-price {
+      color: var(--ok); /* Verde para preço de oferta */
+    }
+
+    /* --- Notificações Toast --- */
+    #toastContainer {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      pointer-events: none;
+    }
+    .toast-notification {
+      background: #f1f1f1;
+      color: #111;
+      padding: 12px 18px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px #00000040;
+      font-size: 14px;
+      border-left: 5px solid var(--accent);
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      margin-top: 10px;
+    }
+    .toast-notification.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* --- Seção de Avaliações --- */
+    .reviews-section {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid #3a2a1e;
+    }
+    .reviews-section h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+      font-size: 22px;
+    }
+    .review-card {
+      background: var(--panel);
+      border: 1px solid #3a2a1e;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .review-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .review-header img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #5d3a22;
+    }
+    .review-header .name {
+      font-weight: 700;
+      margin: 0;
+      font-size: 15px;
+    }
+    .review-stars {
+      color: var(--accent);
+      font-size: 16px;
+    }
+    .review-body {
+      font-size: 14px;
+      color: var(--muted);
+      font-style: italic;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toastContainer"></div>
+
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="badge">Burguer Burguer Artesanal</div>
+        <span class="pill tiny">Cardápio online</span>
+      </div>
+      <button class="ghost" id="openCart">🛒 Carrinho <span id="cartCount" class="pill" style="margin-left:8px">0</span></button>
+    </header>
+
+    <div class="black-friday-banner">
+      🔥 <strong>BLACK FRIDAY!</strong> Preços especiais de Novembro! Aproveite!
+    </div>
+
+    <div class="note" style="margin-bottom:12px">Clique em <b>+</b> para adicionar. Ao finalizar, o pedido abre direto no <b>WhatsApp</b> com todos os itens e total.</div>
+    <div id="menu" class="grid"></div>
+
+    <div class="reviews-section">
+      <h2>O que dizem nossos clientes</h2>
+      <div id="reviewsGrid" class="grid">
+        </div>
+    </div>
+
+  </div>
+  <div class="cartBar">
+    <div class="cartInner">
+      <strong>Subtotal:</strong> <span id="subBar">R$ 0,00</span>
+      <div class="spacer"></div>
+      <button class="btn" id="viewCart">Ver carrinho</button>
+      <button class="whats" id="goWhats">Finalizar no WhatsApp</button>
+    </div>
+  </div>
+  <div class="drawer" id="drawer">
+    <div class="panel">
+      <header>
+        <h2>Seu pedido</h2>
+        <button class="ghost" id="closeCart">✕</button>
+      </header>
+      <div class="items" id="cartItems"></div>
+      <div class="footer">
+        <div class="total"><span>Total</span> <span id="total">R$ 0,00</span></div>
+        <label class="tiny muted">Observações</label>
+        <textarea id="obs" rows="2" placeholder="Ex.: tirar picles, maionese à parte..."></textarea>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label class="tiny muted">Seu nome</label>
+            <input id="clientName" placeholder="Seu nome" />
+          </div>
+          <div>
+            <label class="tiny muted">Forma de retirada</label>
+            <select id="delivery">
+              <option value="Retirada">Retirada</option>
+              <option value="Entrega">Entrega</option>
+            </select>
+          </div>
+        </div>
+        <label class="tiny muted">Endereço (se entrega)</label>
+        <input id="address" placeholder="Rua, número, bairro" />
+        <button class="whats" id="checkout">Enviar pedido no WhatsApp</button>
+        <div class="tiny muted">Ao clicar, abriremos o WhatsApp com sua mensagem de pedido pronta.</div>
+      </div>
+    </div>
+  </div>
+<script>
+/*************************************************
+ * CONFIGURAÇÕES – EDITE AQUI
+ *************************************************/
+const CONFIG = {
+  whatsappNumber: '5534996941692',
+  restaurantName: 'Burguer Burguer Artesanal',
+};
+
+// Produtos – você pode ajustar preço/descrição quando quiser
+// NOVO: Adicione "oldPrice" para mostrar o desconto da Black Friday
+// (ALTERADO: Todos os itens agora têm oldPrice)
+const PRODUCTS = [
+  { id:'one',   name:'BURGUER BU',              price: 19.90, oldPrice: 24.90, img:'one1.png', desc:'Pão, nossa maionese, hambúrguer 110g, american cheese, batata fina, bacon, alface e tomate.' },
+  { id:'two',   name:'BURGUER BURGUER',         price: 19.90, oldPrice: 24.90, img:'two.png', desc:'Pão, nossa maionese, hambúrguer 110g, american cheese, cebola caramelizada, bacon, alface e tomate.' },
+  { id:'three', name:'DUPLO BURGUER',           price: 23.90, oldPrice: 31.90, img:'three3.png', desc:'Pão, nossa maionese, 2 hambúrguer 110g, 2 american cheese, picles e batata fina.' },
+  { id:'four',  name:'FRANGO PESTO',            price: 22.90, oldPrice: 29.90, img:'four4.png', desc:'Pão, nossa maionese, frango empanado (pincelado com molho cajun não picante), american cheese, tomate cereja, pesto, bacon.' },
+  { id:'five',  name:'FRANGO NASHI',            price: 21.90, oldPrice: 27.90, img:'five5.png', desc:'Pão, nossa maionese, alface picadinho na mayo, frango empanado (pincelado com molho nashville não picante), picles.' },
+  { id:'six',   name:'FRANGO CAJUN',            price: 21.90, oldPrice: 27.90, img:'six6.png', desc:'Pão, nossa maionese, alface e repolho picadinho na mayo, frango empanado (cajun não picante), picles, batata fina.' },
+  { id:'seven', name:'FRANGO FRI',              price: 21.90, oldPrice: 27.90, img:'seven7.png', desc:'Pão, nossa maionese, frango empanado (nashville não picante), american cheese, bacon, picles, batata fina.' },
+  { id:'eight', name:'DUPLO K VINHO-TINTO',     price: 27.90, oldPrice: 34.90, img:'eight8.jpg', desc:'Pão, nossa maionese, 2 hambúrguer 110g, 2 american cheese, cebola caramelizada (com vinho tinto), bacon, tomate.' },
+  { id:'nine',  name:'DUPLO CARAMELIZADO',      price: 27.90, oldPrice: 34.90, img:'nine9.jpg', desc:'Pão, nossa maionese, 2 hambúrguer 110g, 2 american cheese, cebola caramelizada, bacon.' },
+  { id:'ten',   name:'TERIYAKI',                price: 25.90, oldPrice: 31.90, img:'ten10.jpg', desc:'Pão, maionese wasabi, cebola picadinha, tomate, 2 hambúrguer 110g (pincelado com molho teriyaki), 2 american cheese, picles.' },
+  { id:'eleven',name:'BURGUER CHEDDAR',         price: 17.90, oldPrice: 22.90, img:'eleven11.png', desc:'Pão, nosso cheddar cremoso e hambúrguer 110g.' },
+];
+
+/*************************************************
+ * NOVOS DADOS (ADICIONADOS)
+ *************************************************/
+
+// --- Lista de Nomes Falsos para Notificações (20 nomes) ---
+const FAKE_NAMES = [
+  'João V.', 'Maria C.', 'Pedro S.', 'Ana L.', 'Lucas M.', 'Gabriela P.',
+  'Matheus F.', 'Larissa A.', 'Bruno G.', 'Fernanda R.', 'Diego B.', 'Camila T.',
+  'Felipe N.', 'Beatriz J.', 'Thiago O.', 'Amanda K.', 'Ricardo L.', 'Sofia P.',
+  'Guilherme H.', 'Laura S.'
+];
+
+// --- Lista de Avaliações Falsas (ALTERADO: Novas fotos de rosto) ---
+const REVIEWS = [
+  { name: 'Juliana Mendes', stars: 5, img: 'https://picsum.photos/id/21/48/48', text: 'Simplesmente o melhor hambúrguer artesanal da cidade! O Duplo K Vinho-Tinto é uma explosão de sabor. Recomendo demais!' },
+  { name: 'Marcos Alves', stars: 5, img: 'https://picsum.photos/id/22/48/48', text: 'Atendimento rápido e o lanche... sem palavras. O Frango Nash é super crocante e saboroso. Virei cliente fiel!' },
+  { name: 'Carla Silva', stars: 5, img: 'https://picsum.photos/id/26/48/48', text: 'Pedimos o Burguer Bu e o Duplo Burguer. Ambos maravilhosos! A maionese da casa é divina e a batata fina dá um toque especial.' },
+  { name: 'Rafael Gomes', stars: 5, img: 'https://picsum.photos/id/28/48/48', text: 'Que cheddar cremoso é esse do Burguer Cheddar?! Sensacional. Simples, gostoso e com preço justo. Parabéns!' }
+];
+
+
+/*************************************************
+ * APP
+ *************************************************/
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+const state = {
+  cart: {}, // {productId: qty}
+};
+function formatBR(v){
+  return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+
+// --- FUNÇÃO RENDERMENU (MODIFICADA) ---
+function renderMenu(){
+  const grid = $('#menu');
+  grid.innerHTML = PRODUCTS.map(p=>{
+    
+    // Lógica de preço (Modificado)
+    let priceHTML = '';
+    if (p.oldPrice) {
+      // Se tem preço antigo, mostra "De/Por"
+      priceHTML = `<span class="old-price">${formatBR(p.oldPrice)}</span> <span class="new-price">${formatBR(p.price)}</span>`;
+    } else {
+      // Senão, mostra o preço normal
+      priceHTML = formatBR(p.price);
+    }
+
+    return `
+      <div class="card">
+        ${p.img ? `<img src="${p.img}" alt="${p.name}">` : `<img alt="${p.name}" src="https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1200&auto=format&fit=crop"/>`}
+        <div class="body">
+          <h3 class="name">${p.name}</h3>
+          <div class="desc">${p.desc}</div>
+          <div class="priceQty">
+            <div class="price">${priceHTML}</div> <div class="qty">
+              <button onclick="dec('${p.id}')">−</button>
+              <span id="q_${p.id}">0</span>
+              <button onclick="inc('${p.id}')">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+function inc(id){
+  state.cart[id] = (state.cart[id]||0)+1;
+  update();
+}
+function dec(id){
+  if(!state.cart[id]) return;
+  state.cart[id] = Math.max(0, state.cart[id]-1);
+  if(state.cart[id]===0) delete state.cart[id];
+  update();
+}
+function calcSubtotal(){
+  return Object.entries(state.cart).reduce((sum,[id,qty])=>{
+    const p = PRODUCTS.find(x=>x.id===id);
+    return sum + (p.price*qty);
+  },0);
+}
+function update(){
+  // qty badges
+  PRODUCTS.forEach(p=>{ const el = document.querySelector(`#q_${p.id}`); if(el) el.textContent = state.cart[p.id]||0; });
+  // subtotal
+  const sub = calcSubtotal();
+  document.querySelector('#subBar').textContent = formatBR(sub);
+  document.querySelector('#total').textContent = formatBR(sub);
+  // count
+  const count = Object.values(state.cart).reduce((a,b)=>a+b,0);
+  document.querySelector('#cartCount').textContent = count;
+  renderCartItems();
+}
+function renderCartItems(){
+  const box = document.querySelector('#cartItems');
+  const rows = Object.entries(state.cart);
+  if(rows.length===0){
+    box.innerHTML = `<div class="muted">Seu carrinho está vazio.</div>`;
+    return;
+  }
+  box.innerHTML = rows.map(([id,qty])=>{
+    const p = PRODUCTS.find(x=>x.id===id);
+    return `
+      <div class="item">
+        <div>
+          <div class="title">${p.name}</div>
+          <div class="tiny muted">${p.desc}</div>
+        </div>
+        <div class="muted">${formatBR(p.price)}</div>
+        <div class="controls">
+          <button onclick="dec('${id}')">−</button>
+          <strong>${qty}</strong>
+          <button onclick="inc('${id}')">+</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+function buildWhatsAppMessage(){
+  const lines = [];
+  lines.push(`*${CONFIG.restaurantName}*`);
+  lines.push(`Pedido via cardápio online`);
+  lines.push('');
+  let i=1;
+  for(const [id,qty] of Object.entries(state.cart)){
+    const p = PRODUCTS.find(x=>x.id===id);
+    lines.push(`${i}. ${p.name}  x${qty}  — ${formatBR(p.price*qty)}`);
+    i++;
+  }
+  lines.push('');
+  lines.push(`*Subtotal:* ${formatBR(calcSubtotal())}`);
+  lines.push('');
+  const name = document.querySelector('#clientName').value.trim();
+  const how = document.querySelector('#delivery').value;
+  const addr = document.querySelector('#address').value.trim();
+  const obs  = document.querySelector('#obs').value.trim();
+  if(name) lines.push(`Nome: ${name}`);
+  if(how)  lines.push(`Entrega/Retirada: ${how}`);
+  if(addr) lines.push(`Endereço: ${addr}`);
+  if(obs)  lines.push(`Obs.: ${obs}`);
+  lines.push('');
+  lines.push('Obrigado!');
+  const text = encodeURIComponent(lines.join('\n'));
+  const phone = CONFIG.whatsappNumber.replace(/\D/g,'');
+  return `https://wa.me/${phone}?text=${text}`;
+}
+
+/*************************************************
+ * NOVAS FUNÇÕES (ADICIONADAS)
+ *************************************************/
+
+// --- Função para renderizar as Avaliações ---
+function renderReviews(){
+  const grid = $('#reviewsGrid');
+  grid.innerHTML = REVIEWS.map(r => {
+    const stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
+    return `
+      <div class="review-card">
+        <div class="review-header">
+          <img src="${r.img}" alt="Foto de ${r.name}">
+          <div>
+            <div class="name">${r.name}</div>
+            <div class="review-stars">${stars}</div>
+          </div>
+        </div>
+        <div class="review-body">"${r.text}"</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// --- Função para mostrar Notificação Fake ---
+function showFakeNotification() {
+  const container = $('#toastContainer');
+  
+  // Pega nome e produto aleatório
+  const randomName = FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)];
+  const randomProduct = PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)];
+  
+  // Cria o toast
+  const toast = document.createElement('div');
+  toast.className = 'toast-notification';
+  toast.innerHTML = `<strong>${randomName}</strong> acabou de pedir um <strong>${randomProduct.name}</strong>!`;
+  
+  // Adiciona ao container (remove o anterior se houver)
+  container.innerHTML = '';
+  container.appendChild(toast);
+  
+  // Força o repaint para a animação
+  void toast.offsetWidth;
+  
+  // Adiciona a classe 'show' para o fade in
+  toast.classList.add('show');
+  
+  // Remove o toast depois de 4 segundos
+  setTimeout(() => {
+    toast.classList.remove('show');
+    // Remove do DOM após a animação de fade out
+    setTimeout(() => {
+      if (container.contains(toast)) {
+        container.removeChild(toast);
+      }
+    }, 500); // 0.5s (duração da transição)
+  }, 4000); // 4s visível
+}
+
+
+/*************************************************
+ * INICIALIZAÇÃO
+ *************************************************/
+
+// --- Código original ---
+document.querySelector('#openCart').onclick = () => { document.querySelector('#drawer').style.display='block'; };
+document.querySelector('#viewCart').onclick = () => { document.querySelector('#drawer').style.display='block'; };
+document.querySelector('#closeCart').onclick = () => { document.querySelector('#drawer').style.display='none'; };
+document.querySelector('#drawer').addEventListener('click', (e)=>{ if(e.target.id==='drawer') document.querySelector('#drawer').style.display='none'; });
+document.querySelector('#checkout').onclick = () => {
+  if(Object.keys(state.cart).length===0){
+    alert('Seu carrinho está vazio. Adicione algum lanche.');
+    return;
+  }
+  const url = buildWhatsAppMessage();
+  window.open(url, '_blank');
+};
+document.querySelector('#goWhats').onclick = () => {
+  document.querySelector('#drawer').style.display='block';
+};
+
+renderMenu();
+update();
+
+// --- NOVAS CHAMADAS (ADICIONADAS) ---
+renderReviews();
+
+// Inicia o ciclo de notificações
+setTimeout(showFakeNotification, 2000); // Mostra a primeira depois de 2s
+// (ALTERADO: Intervalo agora é de 20 segundos)
+setInterval(showFakeNotification, 20000); 
+
+</script>
+</body>
+</html>
